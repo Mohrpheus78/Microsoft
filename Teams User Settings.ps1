@@ -11,13 +11,13 @@
         Change the MS Teams VDI installer app settings, such as GPU acceleration or fully close Teams app 
 		
     .EXAMPLE
-		WEM:
-		Path: powershell.exe
+	WEM:
+	Path: powershell.exe
         Arguments: -executionpolicy bypass -file "C:\Program Files (x86)\SuL\Scripts\Teams User Settings.ps1"  
 	    
     .NOTES
-		Execute as WEM external task, logonscript or task at logon
-		You can add seeting 
+	Execute as WEM external task, logonscript or task at logon
+	You can add seeting 
 #>
 
 # Define settings
