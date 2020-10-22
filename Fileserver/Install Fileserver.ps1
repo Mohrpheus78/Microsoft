@@ -19,6 +19,7 @@
 		Define UPM quota in MB, e.g. 200
 
     .NOTES
+	Requirements: Windows Server 2019 with or without data drive (Testesd only with Windows Server 2019).
 	Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
 #>
 
