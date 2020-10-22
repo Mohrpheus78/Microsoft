@@ -1,4 +1,4 @@
-﻿# ****************************************************
+# ****************************************************
 # D. Mohrmann, S&L Firmengruppe, Twitter: @mohrpheus78
 # Install Windows Fileserver for FSLogix or Citrx UPM
 # ****************************************************
@@ -8,18 +8,18 @@
         This script installs File Server Roles, creates folders and shares for FSLogix containers or Citrix UPM and defines quotas on a newly installed fileserver.
 		
     .Description
-		The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
-		The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
+	The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
+	The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
 		
     .EXAMPLE
-		DVD drive: For the new CD/DVD drive letter always use drive and colon, e.g. 'E:'
-		Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
-				 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
-		Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
-				Define UPM quota in MB, e.g. 200
+	DVD drive: For the new CD/DVD drive letter always use drive and colon, e.g. 'E:'
+	Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
+		 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
+	Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
+		Define UPM quota in MB, e.g. 200
 
     .NOTES
-		Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
+	Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
 #>
 
 
@@ -111,16 +111,16 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	{
 		IF (!(Get-Disk | Where-Object Partitionstyle -eq "raw"))
 			{
-			Write-Verbose "Please attach a new virtual disk drive to the VM, for use as data drive" -Verbose
-			Write-Output ""
-			Read-Host -Prompt "Hit any key to continue, after attaching the drive..."
-			Write-Output ""
-			Sleep -s 5
-			Write-Verbose "Initialize drive D: and formatting" -Verbose
-			Write-Output ""
-			Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
-			Write-Verbose "Drive D: is ready" -Verbose
-			Write-Output ""
+			 Write-Verbose "Please attach a new virtual disk drive to the VM, for use as data drive" -Verbose
+			 Write-Output ""
+			 Read-Host -Prompt "Hit any key to continue, after attaching the drive..."
+			 Write-Output ""
+			 Sleep -s 5
+			 Write-Verbose "Initialize drive D: and formatting" -Verbose
+			 Write-Output ""
+			 Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
+			 Write-Verbose "Drive D: is ready" -Verbose
+			 Write-Output ""
 			}
 	}
 	}
