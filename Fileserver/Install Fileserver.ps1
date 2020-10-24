@@ -21,6 +21,7 @@
     .NOTES
 	Requirements: Windows Server 2019 with or without data drive (Testesd only with Windows Server 2019).
 	Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
+	Edit lines 154/155 and 209/210 to match your language for the "Everyone" group!
 #>
 
 
@@ -178,7 +179,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	$Action_array = @($Action1,$Action2)
 	$Threshold = New-FsrmQuotaThreshold -Percentage 90 -Action $Action_array
 	New-FsrmQuotaTemplate -Name "FSLogix Profile Disks" -Size ([int64]($ProfileQuota) * [int64]1GB) -SoftLimit -Threshold $Threshold
-	New-FsrmQuota -Path "$FSLFolder\Profiles" -Template "FSLogix Profile Disks"
+	New-FsrmAutoQuota -Path "$FSLFolder\Profiles" -Template "FSLogix Profile Disks"
 	
 	# FSLogix Office 365 Disk
 	$Action1 = New-FsrmAction -Type Event -EventType Warning -Body "User [Source Io Owner] has exceeded the [Quota Threshold]% quota threshold for the quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB, and [Quota Used MB] MB currently is in use ([Quota Used Percent]% of limit)." -RunLimitInterval 180
@@ -186,7 +187,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	$Action_array = @($Action1,$Action2)
 	$Threshold = New-FsrmQuotaThreshold -Percentage 90 -Action $Action_array
 	New-FsrmQuotaTemplate -Name "FSLogix Office365 Disks" -Size ([int64]($O365Quota) * [int64]1GB) -SoftLimit -Threshold $Threshold
-	New-FsrmQuota -Path "$FSLFolder\Office365" -Template "FSLogix Office365 Disks"
+	New-FsrmAutoQuota -Path "$FSLFolder\Office365" -Template "FSLogix Office365 Disks"
 	) | Out-Null
 	Write-Verbose "Quotas for FSLogix successfully created (Eventlog and report)" -Verbose
 	Write-Output ""
@@ -227,7 +228,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	$Action_array = @($Action1,$Action2)
 	$Threshold = New-FsrmQuotaThreshold -Percentage 90 -Action $Action_array
 	New-FsrmQuotaTemplate -Name "Citrix UPM profiles" -Size ([int64]($ProfileQuota) * [int64]1024KB) -SoftLimit -Threshold $Threshold
-	New-FsrmQuota -Path "$CitrixFolder\Profiles" -Template "Citrix UPM profiles"
+	New-FsrmAutoQuota -Path "$CitrixFolder\Profiles" -Template "Citrix UPM profiles"
 	) | Out-Null
 	Write-Verbose "Quota for Citrix UPM successfully created (Eventlog and report)" -Verbose
 	Write-Output ""
