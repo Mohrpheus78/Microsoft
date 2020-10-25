@@ -7,11 +7,11 @@
 .SYNOPSIS
 This script installs File Server Roles, creates folders and shares for FSLogix containers or Citrix UPM and defines quotas on a newly installed fileserver.
 		
-.Description
+.DESCRIPTION
 The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
 The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
 		
-.PARAMETER
+.PARAMETERS
 -Platform 'FSLogix' or 'CitrixUPM'
 -DvdDriveLetter 'E:' or any other letter except 'D:'
 	
