@@ -4,26 +4,47 @@
 # ****************************************************
 
 <#
-    .SYNOPSIS
-        This script installs File Server Roles, creates folders and shares for FSLogix containers or Citrix UPM and defines quotas on a newly installed fileserver.
+.SYNOPSIS
+This script installs File Server Roles, creates folders and shares for FSLogix containers or Citrix UPM and defines quotas on a newly installed fileserver.
 		
-    .Description
-	The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
-	The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
+.Description
+The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
+The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
 		
-    .EXAMPLE
-	DVD drive: For the new CD/DVD drive letter always use drive and colon, e.g. 'E:'
-	Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
-		 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
-	Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
-		Define UPM quota in MB, e.g. 200
+.PARAMETER
+-Platform 'FSLogix' or 'CitrixUPM'
+-DvdDriveLetter 'E:' or any other letter except 'D:'
+	
+.EXAMPLE
+."Install and configure Fileserver.ps1" -Platform FSLogix -DvdDriveLetter E:
+Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
+	 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
+Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
+	Define UPM quota in MB, e.g. 200
 
-    .NOTES
-	Requirements: Windows Server 2019 with or without data drive (Testesd only with Windows Server 2019).
-	Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
-	Edit lines 154/155 and 209/210 to match your language for the "Everyone" group!
+.NOTES
+Requirements: Windows Server 2019 with or without data drive (Tested only with Windows Server 2019).
+Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
+Edit lines 167/168 and 222/223 to match your language for the "Everyone" group!
 #>
 
+
+[CmdletBinding()]
+
+param
+    (
+        # For use with FSLogix containers or Citrix User Profile Manager
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [String]$Platform,
+
+        # New drive letter for DVD drive (Drive D: is required for profiles)
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [String]$DvdDriveLetter
+    )
 
 # Install Windows Rolles and Features
 IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
@@ -37,37 +58,36 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	}
 	
 # CD/DVD drive
+if ($DvdDriveLetter -eq "D:")
+{
+	Write-Verbose "Error! You cannot choose drive $DvdDriveLetter! Drive D: is required for the data disk" -Verbose
+	Write-Verbose "Choose another drive letter for your DVD drive and try run script again!" -Verbose
+	BREAK
+}
+
 $DvdDrv = Get-WmiObject -Class Win32_Volume -Filter "DriveType=5"
 if ($DvdDrv -ne $null)
 {
 	# Get current DVD drive letter
-	$DvdDrvLetter = $DvdDrv | Select-Object -ExpandProperty DriveLetter
-	Write-Verbose "Current CD/DVD drive is $DvdDrvLetter" -Verbose
+	$CurrentDvdDrvLetter = $DvdDrv | Select-Object -ExpandProperty DriveLetter
+	Write-Verbose "Current CD/DVD drive is $CurrentDvdDrvLetter" -Verbose
 	Write-Output ""
 	
-	if (!($DvdDrvLetter -eq "E:"))
+	if (!($CurrentDvdDrvLetter -eq "E:"))
 	{
-		# Check if drive D: is in use
-		if ($DvdDrvLetter -eq "D:")
-			{
-			# Define drive letter for CD/DVD drive
-			$NewDVDDrive = Read-Host -Prompt "Define a new drive letter for CD/DVD drive, so that FSLogix data drive can be set to drive D: (e.g. E:)"
-			Write-Output ""
-			}
-		 
-			# Check if new drive letter is in use
-			if (!(Test-Path -Path $NewDVDDrive))
-			{
-			# Change CD/DVD drive
-			$DvdDrv | Set-WmiInstance -Arguments @{DriveLetter="$NewDVDDrive"} | Out-Null
-			Write-Verbose "CD/DVD drive letter changed to $NewDVDDrive" -Verbose
-			Write-Output ""
-			}
-			else
-			{
-			 Write-Verbose "Error: Drive $NewDVDDrive is in use"
-			 BREAK
-			}
+		# Check if new drive letter is in use
+		if (!(Test-Path -Path $DvdDriveLetter))
+		{
+		# Change CD/DVD drive
+		$DvdDrv | Set-WmiInstance -Arguments @{DriveLetter="$DvdDriveLetter"} | Out-Null
+		Write-Verbose "CD/DVD drive letter changed to $DvdDriveLetter" -Verbose
+		Write-Output ""
+		}
+		else
+		{
+		 Write-Verbose "Error: Drive $DvdDriveLetter is in use" -Verbose
+		 BREAK
+		}
 	}
 }
 else
@@ -99,7 +119,7 @@ IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"}
 	
 # Formatting drive D: if an unitialized drive is present
 IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"})
-	{
+	{	
 	 Write-Verbose "Initialize drive D: and formatting" -Verbose
 	 Write-Output ""
 	 Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"} | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
@@ -112,7 +132,7 @@ IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {$_.DriveType -eq "Fixed
 		{
 		 Write-Verbose "Please attach a new virtual disk drive to the VM, for use as data drive" -Verbose
 		 Write-Output ""
-		 Read-Host -Prompt "Hit any key to continue, after attaching the drive..."
+		 Read-Host -Prompt "Press enter to continue, after attaching the drive..."
 		 Write-Output ""
 		 Sleep -s 5
 		 Write-Verbose "Initialize drive D: and formatting" -Verbose
@@ -125,11 +145,7 @@ IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {$_.DriveType -eq "Fixed
 }
 	
 # FSLogix or Citrix UPM?
-Write-Verbose "Do you want to prepare the server for FSLogix (F) or Citrix UPM (C)?" -Verbose
-Write-Output ""
-$Selection = Read-Host "( F / C )"
-Write-Output ""
-IF ($Selection -eq "F")
+IF ($Platform -eq "FSLogix")
 {
 	# FSLogix FRXContext
 	copy-item "$PSScriptRoot\frxcontext" "${ENV:ProgramFiles(x86)}\FSLogix\frxcontext" -Recurse -Force -EA SilentlyContinue
@@ -159,7 +175,7 @@ IF ($Selection -eq "F")
 		icacls "$FSLFolder\Office365" /remove:g "*S-1-5-32-545"
 		icacls "$FSLFolder\Office365" /grant "*S-1-5-11:M"
 		) | Out-Null
-		Write-Verbose "FSLogix folders successfully created" -Verbose
+		Write-Verbose "FSLogix folders and share successfully created with the appropriate rights" -Verbose
 		Write-Output ""
 	}
 	
@@ -190,7 +206,7 @@ IF ($Selection -eq "F")
 	Write-Output ""
 }
 	
-Else
+IF ($Platform -eq "CitrixUPM")
 {
 	# Create Citrix UPM folders
 	$CitrixFolder = Read-Host -Prompt "Define Citrix UPM folder for profiles without quotation marks (e.g. D:\Citrix), subfolder UPM gets created automatically"
@@ -210,7 +226,7 @@ Else
 		icacls "$CitrixFolder\Profiles" /remove:g "*S-1-5-32-545"
 		icacls "$CitrixFolder\Profiles" /grant "*S-1-5-11:(RD,RC,AD,RA,REA)"
 		) | Out-Null
-		Write-Verbose "Citrix UPM folder successfully created" -Verbose
+		Write-Verbose "Citrix UPM folder and share successfully created with the appropriate rights" -Verbose
 		Write-Output ""
 	}
 	
