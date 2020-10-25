@@ -185,8 +185,8 @@ IF ($Platform -eq "FSLogix")
 	Write-Verbose "Creating quotas for File Server Ressource Manager" -Verbose
 	Write-Output ""
 	# FSLogix Profile Disks
-	$ProfileQuota = Read-Host -Prompt "Define quota for the profile disks in GB"
-	$O365Quota = Read-Host -Prompt "Define quota for the profile disks in GB"
+	$ProfileQuota = Read-Host -Prompt "Define quota for the profile disks in GB and press enter"
+	$O365Quota = Read-Host -Prompt "Define quota for the profile disks in GB and press enter"
 
 	$(
 	$Action1 = New-FsrmAction -Type Event -EventType Warning -Body "User [Source Io Owner] has exceeded the [Quota Threshold]% quota threshold for the quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB, and [Quota Used MB] MB currently is in use ([Quota Used Percent]% of limit)." -RunLimitInterval 180
@@ -236,7 +236,7 @@ IF ($Platform -eq "CitrixUPM")
 	Write-Verbose "Creating quotas for File Server Ressource Manager" -Verbose
 	Write-Output ""
 	# Citrix UPM profiles
-	$ProfileQuota = Read-Host -Prompt "Define quota for the UPM profiles in MB"
+	$ProfileQuota = Read-Host -Prompt "Define quota for the UPM profiles in MB and press enter"
 	$(
 	$Action1 = New-FsrmAction -Type Event -EventType Warning -Body "User [Source Io Owner] has exceeded the [Quota Threshold]% quota threshold for the quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB, and [Quota Used MB] MB currently is in use ([Quota Used Percent]% of limit)." -RunLimitInterval 180
 	$Action2 = New-FsrmAction -Type Report -ReportTypes QuotaUsage -RunLimitInterval 180
