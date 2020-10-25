@@ -11,8 +11,10 @@ This script installs File Server Roles, creates folders and shares for FSLogix c
 The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
 The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
 		
-.PARAMETERS
+.PARAMETER Platform
 -Platform 'FSLogix' or 'CitrixUPM'
+
+.PARAMETER DvdDriveLetter
 -DvdDriveLetter 'E:' or any other letter except 'D:'
 	
 .EXAMPLE
@@ -25,7 +27,7 @@ Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
 .NOTES
 Requirements: Windows Server 2019 with or without data drive (Tested only with Windows Server 2019).
 Unfortunately after installing the FS-Resource-Manager roles, the server needs a reboot, otherwise the Posh cmldlet doesn't work.
-Edit lines 167/168 and 222/223 to match your language for the "Everyone" group!
+Edit lines 169/170 and 224/225 to match your language for the "Everyone" group!
 #>
 
 
