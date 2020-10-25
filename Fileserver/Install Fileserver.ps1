@@ -36,110 +36,107 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	Restart-Computer
 	}
 	
+# CD/DVD drive
+$DvdDrv = Get-WmiObject -Class Win32_Volume -Filter "DriveType=5"
+if ($DvdDrv -ne $null)
+{
+	# Get current DVD drive letter
+	$DvdDrvLetter = $DvdDrv | Select-Object -ExpandProperty DriveLetter
+	Write-Verbose "Current CD/DVD drive is $DvdDrvLetter" -Verbose
+	Write-Output ""
 	
-	# CD/DVD drive
-	$DvdDrv = Get-WmiObject -Class Win32_Volume -Filter "DriveType=5"
-	if ($DvdDrv -ne $null)
+	if (!($DvdDrvLetter -eq "E:"))
 	{
-		# Get current DVD drive letter
-		$DvdDrvLetter = $DvdDrv | Select-Object -ExpandProperty DriveLetter
-		Write-Verbose "Current CD/DVD drive is $DvdDrvLetter" -Verbose
-		Write-Output ""
-		
-		if (!($DvdDrvLetter -eq "E:"))
-		{
-			# Check if drive D: is in use
-			if ($DvdDrvLetter -eq "D:")
-				{
-				# Define drive letter for CD/DVD drive
-				$NewDVDDrive = Read-Host -Prompt "Define a new drive letter for CD/DVD drive, so that FSLogix data drive can be set to drive D: (e.g. E:)"
-				Write-Output ""
-				}
-			 
-				# Check if new drive letter is in use
-				if (!(Test-Path -Path $NewDVDDrive))
-				{
-				# Change CD/DVD drive
-				$DvdDrv | Set-WmiInstance -Arguments @{DriveLetter="$NewDVDDrive"} | Out-Null
-				Write-Verbose "CD/DVD drive letter changed to $NewDVDDrive" -Verbose
-				Write-Output ""
-				}
-				else
-				{
-				 Write-Verbose "Error: Drive $NewDVDDrive is in use"
-				 BREAK
-				}
-		}
-	}
-	else
-		{
-		Write-Verbose "Information: No CD/DVD drive available, no need to change the drive letter!" -Verbose
-		Write-Output ""
-		}
-	
-	
-	# Create data drive
-	#Check if data drive D: is present
-	IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {($_.DriveType -eq "Fixed") -and ($_.DriveFormat -eq "NTFS") -and ($_.Name -eq "D:\")}))
-	{
-		
-	# Convert drive D: to GPT if an existing drive is present (MBR)
-	IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "mbr" -and $_.Number -eq "1"})
-		{
-		 Write-Verbose "Converting drive D: to GPT, formatting drive D:" -Verbose
-		 Write-Output ""
-		 Set-Disk -Number "1" -PartitionStyle GPT
-		 Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"} | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
-		}
-		
-	# Formatting drive D: if an existing GPT drive is present
-	IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"})
-		{
-		 Write-Verbose "Formatting drive D:" -Verbose
-		 Write-Output ""
-		 Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"} | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
-		}
-		
-	# Formatting drive D: if an unitialized drive is present
-	IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"})
-		{
-		 Write-Verbose "Initialize drive D: and formatting" -Verbose
-		 Write-Output ""
-		 Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"} | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
-		}
-		
-	# Formatting drive D: if no drive is present
-	IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {$_.DriveType -eq "Fixed" -and $_.Name -eq "D:\"}))
-	{
-		IF (!(Get-Disk | Where-Object Partitionstyle -eq "raw"))
+		# Check if drive D: is in use
+		if ($DvdDrvLetter -eq "D:")
 			{
-			 Write-Verbose "Please attach a new virtual disk drive to the VM, for use as data drive" -Verbose
-			 Write-Output ""
-			 Read-Host -Prompt "Hit any key to continue, after attaching the drive..."
-			 Write-Output ""
-			 Sleep -s 5
-			 Write-Verbose "Initialize drive D: and formatting" -Verbose
-			 Write-Output ""
-			 Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
-			 Write-Verbose "Drive D: is ready" -Verbose
-			 Write-Output ""
+			# Define drive letter for CD/DVD drive
+			$NewDVDDrive = Read-Host -Prompt "Define a new drive letter for CD/DVD drive, so that FSLogix data drive can be set to drive D: (e.g. E:)"
+			Write-Output ""
+			}
+		 
+			# Check if new drive letter is in use
+			if (!(Test-Path -Path $NewDVDDrive))
+			{
+			# Change CD/DVD drive
+			$DvdDrv | Set-WmiInstance -Arguments @{DriveLetter="$NewDVDDrive"} | Out-Null
+			Write-Verbose "CD/DVD drive letter changed to $NewDVDDrive" -Verbose
+			Write-Output ""
+			}
+			else
+			{
+			 Write-Verbose "Error: Drive $NewDVDDrive is in use"
+			 BREAK
 			}
 	}
+}
+else
+	{
+	Write-Verbose "Information: No CD/DVD drive available, no need to change the drive letter!" -Verbose
+	Write-Output ""
 	}
 	
-	# FSLogix or Citrix UPM?
-	Write-Verbose "Do you want to prepare the server for FSLogix (F) or Citrix UPM (C)?" -Verbose
-	Write-Output ""
-	$Selection = Read-Host "( F / C )"
-	Write-Output ""
-	IF ($Selection -eq "F")
+# Create data drive
+#Check if data drive D: is present
+IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {($_.DriveType -eq "Fixed") -and ($_.DriveFormat -eq "NTFS") -and ($_.Name -eq "D:\")}))
+{
+# Convert drive D: to GPT if an existing drive is present (MBR)
+IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "mbr" -and $_.Number -eq "1"})
 	{
+	 Write-Verbose "Converting drive D: to GPT, formatting drive D:" -Verbose
+	 Write-Output ""
+	 Set-Disk -Number "1" -PartitionStyle GPT
+	 Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"} | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
+	}
+	
+# Formatting drive D: if an existing GPT drive is present
+IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"})
+	{
+	 Write-Verbose "Formatting drive D:" -Verbose
+	 Write-Output ""
+	 Get-Disk | Where-Object {$_.Partitionstyle -eq "gpt" -and $_.Number -eq "1"} | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
+	}
+	
+# Formatting drive D: if an unitialized drive is present
+IF (Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"})
+	{
+	 Write-Verbose "Initialize drive D: and formatting" -Verbose
+	 Write-Output ""
+	 Get-Disk | Where-Object {$_.Partitionstyle -eq "raw" -and $_.Number -eq "1"} | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
+	}
+		
+# Formatting drive D: if no drive is present
+IF (!([System.IO.DriveInfo]::GetDrives() | Where-Object {$_.DriveType -eq "Fixed" -and $_.Name -eq "D:\"}))
+	{
+	IF (!(Get-Disk | Where-Object Partitionstyle -eq "raw"))
+		{
+		 Write-Verbose "Please attach a new virtual disk drive to the VM, for use as data drive" -Verbose
+		 Write-Output ""
+		 Read-Host -Prompt "Hit any key to continue, after attaching the drive..."
+		 Write-Output ""
+		 Sleep -s 5
+		 Write-Verbose "Initialize drive D: and formatting" -Verbose
+		 Write-Output ""
+		 Get-Disk | Where-Object partitionstyle -eq 'raw' | Initialize-Disk -PartitionStyle GPT -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel "Data" -Confirm:$false | Out-Null
+		 Write-Verbose "Drive D: is ready" -Verbose
+		 Write-Output ""
+		}
+	}
+}
+	
+# FSLogix or Citrix UPM?
+Write-Verbose "Do you want to prepare the server for FSLogix (F) or Citrix UPM (C)?" -Verbose
+Write-Output ""
+$Selection = Read-Host "( F / C )"
+Write-Output ""
+IF ($Selection -eq "F")
+{
 	# FSLogix FRXContext
 	copy-item "$PSScriptRoot\frxcontext" "${ENV:ProgramFiles(x86)}\FSLogix\frxcontext" -Recurse -Force -EA SilentlyContinue
 	Start-Process -FilePath "${ENV:ProgramFiles(x86)}\FSLogix\frxcontext\frxcontext.exe" -ArgumentList "--install" | Out-Null
 	Write-Verbose "FSLogix context menu (frxcontext) successfully installed" -Verbose
 	Write-Output ""
-	
+
 	# Create FSLogix folders
 	$FSLFolder = Read-Host -Prompt "Define FSLogix folder for profiles and office containers without quotation marks (e.g. D:\FSLogix), subfolders are created automatically"
 	Write-Output ""
@@ -172,7 +169,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	# FSLogix Profile Disks
 	$ProfileQuota = Read-Host -Prompt "Define quota for the profile disks in GB"
 	$O365Quota = Read-Host -Prompt "Define quota for the profile disks in GB"
-	
+
 	$(
 	$Action1 = New-FsrmAction -Type Event -EventType Warning -Body "User [Source Io Owner] has exceeded the [Quota Threshold]% quota threshold for the quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB, and [Quota Used MB] MB currently is in use ([Quota Used Percent]% of limit)." -RunLimitInterval 180
 	$Action2 = New-FsrmAction -Type Report -ReportTypes QuotaUsage -RunLimitInterval 180
@@ -180,7 +177,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	$Threshold = New-FsrmQuotaThreshold -Percentage 90 -Action $Action_array
 	New-FsrmQuotaTemplate -Name "FSLogix Profile Disks" -Size ([int64]($ProfileQuota) * [int64]1GB) -SoftLimit -Threshold $Threshold
 	New-FsrmAutoQuota -Path "$FSLFolder\Profiles" -Template "FSLogix Profile Disks"
-	
+
 	# FSLogix Office 365 Disk
 	$Action1 = New-FsrmAction -Type Event -EventType Warning -Body "User [Source Io Owner] has exceeded the [Quota Threshold]% quota threshold for the quota on [Quota Path] on server [Server]. The quota limit is [Quota Limit MB] MB, and [Quota Used MB] MB currently is in use ([Quota Used Percent]% of limit)." -RunLimitInterval 180
 	$Action2 = New-FsrmAction -Type Report -ReportTypes QuotaUsage -RunLimitInterval 180
@@ -191,10 +188,10 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	) | Out-Null
 	Write-Verbose "Quotas for FSLogix successfully created (Eventlog and report)" -Verbose
 	Write-Output ""
-	}
+}
 	
-	Else
-	{
+Else
+{
 	# Create Citrix UPM folders
 	$CitrixFolder = Read-Host -Prompt "Define Citrix UPM folder for profiles without quotation marks (e.g. D:\Citrix), subfolder UPM gets created automatically"
 	Write-Output ""
@@ -232,7 +229,7 @@ IF (!(Get-WindowsFeature -Name FS-Fileserver).Installed) {
 	) | Out-Null
 	Write-Verbose "Quota for Citrix UPM successfully created (Eventlog and report)" -Verbose
 	Write-Output ""
-	}
-	
-	# End of script
-	Write-Verbose "End of script!"  -Verbose
+}
+
+# End of script
+Write-Verbose "End of script!"  -Verbose
