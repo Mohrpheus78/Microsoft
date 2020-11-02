@@ -18,7 +18,7 @@ The script will install all neccessary File Server roles, create the shares and 
 -DvdDriveLetter 'E:' or any other letter except 'D:'
 	
 .EXAMPLE
-."Install and configure Fileserver.ps1" -Platform FSLogix -DvdDriveLetter E:
+."Configure Fileserver.ps1" -Platform FSLogix -DvdDriveLetter E:
 Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
 	 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
 Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
