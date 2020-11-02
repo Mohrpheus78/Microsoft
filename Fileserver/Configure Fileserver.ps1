@@ -166,8 +166,7 @@ IF ($Platform -eq "FSLogix")
 		New-Item -Path "$FSLFolder" -ItemType Directory
 		icacls "$FSLFolder" /inheritance:d
 		icacls "$FSLFolder" /remove:g "*S-1-1-0"
-		New-SMBShare -Name FSLogix$ -Path "$FSLFolder" -FullAccess Everyone -CachingMode None -EA SilentlyContinue
-		New-SMBShare -Name FSLogix$ -Path "$FSLFolder" -FullAccess Jeder -CachingMode None -EA SilentlyContinue
+		New-SMBShare -Name FSLogix$ -Path "$FSLFolder" -FullAccess S-1-1-0 -CachingMode None -EA SilentlyContinue
 		New-Item -Path "$FSLFolder\Profiles" -ItemType Directory
 		icacls "$FSLFolder\Profiles" /inheritance:d
 		icacls "$FSLFolder\Profiles" /remove:g "*S-1-5-32-545"
@@ -221,8 +220,7 @@ IF ($Platform -eq "CitrixUPM")
 		New-Item -Path "$CitrixFolder" -ItemType Directory
 		icacls "$CitrixFolder" /inheritance:d
 		icacls "$CitrixFolder" /remove:g "*S-1-1-0"
-		New-SMBShare -Name FSLogix$ -Path "$CitrixFolder" -FullAccess Everyone -CachingMode None -EA SilentlyContinue
-		New-SMBShare -Name FSLogix$ -Path "$CitrixFolder" -FullAccess Jeder -CachingMode None -EA SilentlyContinue
+		New-SMBShare -Name FSLogix$ -Path "$CitrixFolder" -FullAccess S-1-1-0 -CachingMode None -EA SilentlyContinue
 		New-Item -Path "$CitrixFolder\Profiles" -ItemType Directory
 		icacls "$CitrixFolder\Profiles" /inheritance:d
 		icacls "$CitrixFolder\Profiles" /remove:g "*S-1-5-32-545"
