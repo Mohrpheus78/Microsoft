@@ -12,6 +12,8 @@ The quotas are soft, only for monitoring and reporting.
 The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
 The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
 If you choose FSLogix "frxcontext" is installed, so you can mount the FSL profiles in the context menu.
+The file system is NTFS, ReFS may be better for FSLogix if you use concurrent access but the quotas aren't supported on ReFS partitions.
+If you don't use concurrent user access with FSLogix you don't have advantages using ReFS file system.
 		
 .PARAMETER Platform
 -Platform 'FSLogix' or 'CitrixUPM'
