@@ -1,16 +1,19 @@
-# ********************************************************************************
+# ***************************************************************************************
 # D. Mohrmann, S&L Firmengruppe, Twitter: @mohrpheus78
 # Install Windows Fileserver for FSLogix or Citrx UPM
-# 04/10/2020: Added REFS volume, You don't need to edit the Everyone group anymore
-# ********************************************************************************
+# 04/10/20: Added Dedup, Added ReFS filesystem, install File Server Ressorce Manager only 
+# with NTFS volume, added detection of already present NTFS volumes
+# ***************************************************************************************
 
 <#
 .SYNOPSIS
 This script installs File Server Roles, creates folders and shares for FSLogix containers or Citrix UPM and defines quotas on a newly installed fileserver.
+Dedup is also activated if you like.
 		
 .DESCRIPTION
 The script changes the CD/DVD drive letter, so that drive letter D: is free for the new data drive. If a data drive is already present the script will use it.
-The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM.
+The script will install all neccessary File Server roles, create the shares and defines the quotas. You can choose between FSLogix or Citrix UPM and NTFS or ReFS file system
+Data deduplication can also be activated (works great with UPM and FSLogix!)
 		
 .PARAMETER Platform
 -Platform 'FSLogix' or 'CitrixUPM'
@@ -20,9 +23,12 @@ The script will install all neccessary File Server roles, create the shares and 
 
 .PARAMETER FileSystem
 -FileSystem 'NTFS' or 'REFS'
+
+.PARAMETER Dedup
+-Dedup 'true' or 'false'
 	
 .EXAMPLE
-."Install and configure Fileserver.ps1" -Platform FSLogix -DvdDriveLetter E: -FileSystem NTFS
+."Install and configure Fileserver.ps1" -Platform FSLogix -DvdDriveLetter E: -FileSystem NTFS -Dedup true
 Folders: If you want the FSLogix profiles to be places in the folder "D:\FSLogix" type D:\FSLogix without quotation marks as target folder, subfolders "Profiles" and "Office365" are created automatically
 		 If you want the Citrix UPM profiles to be placed in "D:\Citrix\UPM" type D:\Citrix without quotation marks as target folder, subfolder "UPM" is created automatically
 Quotas: Define FSLogix quotas in GB, e.g. 10 or 20
@@ -55,7 +61,13 @@ param
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [String]$FileSystem
+        [String]$FileSystem,
+		
+		# Data deduplication
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [String]$Dedup
     )
 
 # Do you run the script as admin?
@@ -386,6 +398,20 @@ IF ($Platform -eq "CitrixUPM")
 	Write-Output ""
 }
 # ========================================================================================================================================
+
+
+# Configure Data deduplication
+# ========================================================================================================================================
+# Enable deduplication
+IF ($Dedup -eq "true")
+	{
+	 Write-Verbose "Configuring data deduplication" -Verbose
+	 Write-Output ""
+	 Enable-DedupVolume -Volume D: -UsageType Default | Out-Null
+	 New-DedupSchedule -Name ThroughputOptimization -Days Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday -Type Optimization -Start 00:00 -DurationHours 4 | Out-Null
+	} 
+# ========================================================================================================================================
+
 
 # End of script
 Write-Verbose "End of script!"  -Verbose
