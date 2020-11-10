@@ -7,4 +7,4 @@ You can select NTFS or ReFS filesystem. ReFS may be better for FSLogix if you us
 Data deduplication can also be activated in the data volume, both Citrix UPM and FSLogix containers work great with data dedup. 
 
 ## Example
-![1] (https://github.com/Mohrpheus78/Microsoft/blob/main/Fileserver/Image/Fileserver.jpeg)
+![1](https://github.com/Mohrpheus78/Microsoft/blob/main/Fileserver/Image/Fileserver.jpeg)
