@@ -28,11 +28,8 @@ param(
 [boolean]$runningOnClose=$False
 )
 
-# Get Teams Configuration
-$FileContent=Get-Content -Path "$ENV:APPDATA\Microsoft\Teams\desktop-config.json"
-
-# Convert file content from JSON format to PowerShell object
-$JSONObject=ConvertFrom-Json -InputObject $FileContent
+## Get Teams Configuration and Convert file content from JSON format to PowerShell object
+$JSONObject=Get-Content -Raw -Path "$ENV:APPDATA\Microsoft\Teams\desktop-config.json" | ConvertFrom-Json
 
 # Update Object settings
 $JSONObject.appPreferenceSettings.disableGpu=$disableGpu
